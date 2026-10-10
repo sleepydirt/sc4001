@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Config:
-    seed: int = 67
+    seed: int = 42
     train_years: tuple[int, ...] = (2017, 2018, 2019, 2020)
     validation_year: int = 2021
     test_year: int = 2022
