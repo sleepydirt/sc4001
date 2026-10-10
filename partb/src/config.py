@@ -7,7 +7,7 @@ DATA_PATH = Path(__file__).resolve().parents[2] / "src" / "data" / "chestxray_bi
 
 @dataclass
 class Config:
-    seed: int = 42
+    seed: int = 67
     data_path: str = str(DATA_PATH)
 
     batch_size: int = 128

@@ -11,10 +11,11 @@ def count_parameters(model):
 
 def count_flops(model, input_shape=(1, 1, 64, 64)):
     """Helper to count FLOPs"""
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
     was_training = model.training
     model.eval()
     with FlopCounterMode(display=False) as counter:
-        model(torch.zeros(*input_shape))
+        model(torch.zeros(*input_shape).to(device))
     model.train(was_training)
     return counter.get_total_flops()
 
@@ -24,11 +25,13 @@ def evaluate(model, loader, criterion=None):
     """Loss and confusion-based metrics, pneumonia = 1"""
     if criterion is None:
         criterion = nn.BCEWithLogitsLoss()
-
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
     model.eval()
     total_loss, count = 0.0, 0
     tp = tn = fp = fn = 0
     for images, labels in loader:
+        images = images.to(device)
+        labels = labels.to(device)
         logits = model(images)
         total_loss += criterion(logits, labels).item() * len(labels)
         count += len(labels)
@@ -53,7 +56,12 @@ def evaluate(model, loader, criterion=None):
 def train_model(model, train_loader, val_loader, config, learning_rate, verbose=True):
     """Training loop with Adam optimiser.
     
-    Early stopping is based on val loss"""
+    Early stopping is based on val loss.
+    
+    If possible, will move data and model to GPU"""
+
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
     criterion = nn.BCEWithLogitsLoss()
     optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -66,8 +74,14 @@ def train_model(model, train_loader, val_loader, config, learning_rate, verbose=
 
     for epoch in range(1, config.max_epochs + 1):
         model.train()
+        model.to(device)
         running_loss, count = 0.0, 0
         for images, labels in train_loader:
+
+            # attempt to move data to GPU
+            
+            images = images.to(device)
+            labels = labels.to(device)
             optimiser.zero_grad()
             loss = criterion(model(images), labels)
             if not torch.isfinite(loss):
