@@ -7,7 +7,7 @@ solutions/
 *.docx
 *.pptx
 *.xlsx
-*.pdf
+*.zip
 .venv/
 outputs/
 __pycache__/
